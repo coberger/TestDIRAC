@@ -221,7 +221,7 @@ class ClientACase ( DataLoggingArgumentsTestCase ):
     self.assertEqual( len( sequenceOne.methodCalls ), 5 )
     self.assertEqual( len( sequenceTwo.methodCalls ), 1 )
 
-    self.assertEqual( sequenceOne.caller.name, 'DIRAC.DataManagementSystem.Client.test.mockDirac.ClientA.doSomething' )
+    self.assertEqual( sequenceOne.caller.name, '__main__.ClientA.doSomething' )
     self.assertEqual( sequenceOne.methodCalls[0].name.name, 'TestDataManager.replicateAndRegister' )
     self.assertEqual( sequenceOne.methodCalls[0].actions[0].fileDL.name, '/data/file1' )
     self.assertEqual( sequenceOne.methodCalls[0].actions[1].fileDL.name, '/data/file2' )
@@ -264,7 +264,7 @@ class ClientACase ( DataLoggingArgumentsTestCase ):
     self.assertEqual( sequenceOne.methodCalls[4].actions[2].status, 'Successful' )
     self.assertEqual( sequenceOne.methodCalls[4].actions[3].status, 'Failed' )
 
-    self.assertEqual( sequenceTwo.caller.name, 'DIRAC.DataManagementSystem.Client.test.mockDirac.ClientA.doSomething' )
+    self.assertEqual( sequenceTwo.caller.name, '__main__.ClientA.doSomething' )
     self.assertEqual( sequenceTwo.methodCalls[0].name.name, 'TestStorageElement.getFileSize' )
     self.assertEqual( sequenceTwo.methodCalls[0].actions[0].fileDL.name, '/data/file1' )
     self.assertEqual( sequenceTwo.methodCalls[0].actions[1].fileDL.name, '/data/file2' )
@@ -295,7 +295,7 @@ class ClientBCase ( DataLoggingArgumentsTestCase ):
     self.assertEqual( len( sequenceOne.methodCalls ), 4 )
     self.assertEqual( len( sequenceTwo.methodCalls ), 1 )
 
-    self.assertEqual( sequenceOne.caller.name, 'DIRAC.DataManagementSystem.Client.test.mockDirac.ClientB.doSomething' )
+    self.assertEqual( sequenceOne.caller.name, '__main__.ClientB.doSomething' )
     self.assertEqual( sequenceOne.methodCalls[0].name.name, 'TestDataManager.putAndRegister' )
     self.assertEqual( sequenceOne.methodCalls[0].actions[0].fileDL.name, '/data/file1' )
     self.assertEqual( sequenceOne.methodCalls[0].actions[1].fileDL.name, '/data/file2' )
@@ -332,7 +332,7 @@ class ClientBCase ( DataLoggingArgumentsTestCase ):
     self.assertEqual( sequenceOne.methodCalls[3].actions[2].status, 'Successful' )
     self.assertEqual( sequenceOne.methodCalls[3].actions[3].status, 'Failed' )
 
-    self.assertEqual( sequenceTwo.caller.name, 'DIRAC.DataManagementSystem.Client.test.mockDirac.ClientB.doSomething' )
+    self.assertEqual( sequenceTwo.caller.name, '__main__.ClientB.doSomething' )
     self.assertEqual( sequenceTwo.methodCalls[0].name.name, 'TestFileCatalog.getFileSize' )
     self.assertEqual( sequenceTwo.methodCalls[0].actions[0].fileDL.name, '/data/file3' )
     self.assertEqual( sequenceTwo.methodCalls[0].actions[0].status, 'Successful' )
@@ -363,7 +363,7 @@ class ClientDCase ( DataLoggingArgumentsTestCase ):
 
     self.assertEqual( len( sequence.methodCalls ), 4 )
 
-    self.assertEqual( sequence.caller.name, 'DIRAC.DataManagementSystem.Client.test.mockDirac.ClientD.doSomething' )
+    self.assertEqual( sequence.caller.name, '__main__.ClientD.doSomething' )
     self.assertEqual( sequence.methodCalls[0].name.name, 'TestDataManager.putAndRegister' )
     self.assertEqual( sequence.methodCalls[0].actions[0].fileDL.name, '/data/file1' )
     self.assertEqual( sequence.methodCalls[0].actions[1].fileDL.name, '/data/file2' )
