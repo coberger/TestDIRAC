@@ -4,12 +4,21 @@ Created on May 22, 2015
 @author: Corentin Berger
 '''
 import unittest
+import socket
+
 from DIRAC import S_OK
+
+from DIRAC.Core.Security.ProxyInfo import getProxyInfo
 
 from DIRAC.DataManagementSystem.Client.DataLoggingClient   import DataLoggingClient
 from DIRAC.DataManagementSystem.Client.DataLoggingDecorator  import DataLoggingDecorator
 
 from threading import Thread
+
+
+"""
+In this tests, we suppose that DatLoggingDB is created and empty
+"""
 
 def splitIntoSuccFailed( lfns ):
   """return some as successful, others as failed """
@@ -221,6 +230,22 @@ class ClientACase ( DataLoggingArgumentsTestCase ):
     self.assertEqual( len( sequenceOne.methodCalls ), 5 )
     self.assertEqual( len( sequenceTwo.methodCalls ), 1 )
 
+    hostName = socket.gethostname()
+    self.assertEqual( sequenceOne.hostName.name, hostName )
+    self.assertEqual( sequenceTwo.hostName.name, hostName )
+
+    proxyInfo = getProxyInfo()
+    if proxyInfo['OK']:
+      proxyInfo = proxyInfo['Value']
+      userName = proxyInfo.get( 'username' )
+      group = proxyInfo.get( 'group' )
+
+    if userName :
+      self.assertEqual( sequenceTwo.userName.name, userName )
+
+    if group :
+      self.assertEqual( sequenceTwo.group.name, group )
+
     self.assertEqual( sequenceOne.caller.name, '__main__.ClientA.doSomething' )
     self.assertEqual( sequenceOne.methodCalls[0].name.name, 'TestDataManager.replicateAndRegister' )
     self.assertEqual( sequenceOne.methodCalls[0].actions[0].fileDL.name, '/data/file1' )
@@ -295,6 +320,24 @@ class ClientBCase ( DataLoggingArgumentsTestCase ):
     self.assertEqual( len( sequenceOne.methodCalls ), 4 )
     self.assertEqual( len( sequenceTwo.methodCalls ), 1 )
 
+    hostName = socket.gethostname()
+    self.assertEqual( sequenceOne.hostName.name, hostName )
+    self.assertEqual( sequenceTwo.hostName.name, hostName )
+
+    proxyInfo = getProxyInfo()
+    if proxyInfo['OK']:
+      proxyInfo = proxyInfo['Value']
+      userName = proxyInfo.get( 'username' )
+      group = proxyInfo.get( 'group' )
+
+    if userName :
+      self.assertEqual( sequenceOne.userName.name, userName )
+      self.assertEqual( sequenceTwo.userName.name, userName )
+
+    if group :
+      self.assertEqual( sequenceOne.group.name, group )
+      self.assertEqual( sequenceTwo.group.name, group )
+
     self.assertEqual( sequenceOne.caller.name, '__main__.ClientB.doSomething' )
     self.assertEqual( sequenceOne.methodCalls[0].name.name, 'TestDataManager.putAndRegister' )
     self.assertEqual( sequenceOne.methodCalls[0].actions[0].fileDL.name, '/data/file1' )
@@ -362,6 +405,21 @@ class ClientDCase ( DataLoggingArgumentsTestCase ):
     sequence = self.dlc.getSequenceByID( '6' )['Value'][0]
 
     self.assertEqual( len( sequence.methodCalls ), 4 )
+
+    hostName = socket.gethostname()
+    self.assertEqual( sequence.hostName.name, hostName )
+
+    proxyInfo = getProxyInfo()
+    if proxyInfo['OK']:
+      proxyInfo = proxyInfo['Value']
+      userName = proxyInfo.get( 'username' )
+      group = proxyInfo.get( 'group' )
+
+    if userName :
+      self.assertEqual( sequence.userName.name, userName )
+
+    if group :
+      self.assertEqual( sequence.group.name, group )
 
     self.assertEqual( sequence.caller.name, '__main__.ClientD.doSomething' )
     self.assertEqual( sequence.methodCalls[0].name.name, 'TestDataManager.putAndRegister' )
