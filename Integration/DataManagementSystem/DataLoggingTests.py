@@ -6,7 +6,7 @@ Created on May 22, 2015
 import unittest
 import socket
 
-from DIRAC import S_OK
+from DIRAC import S_OK, gLogger
 
 from DIRAC.Core.Security.ProxyInfo import getProxyInfo
 
@@ -104,7 +104,7 @@ class TestDataManager:
     return S_OK( {'Successful' : successful, 'Failed' : failed} )
 
 
-  @DataLoggingDecorator( 
+  @DataLoggingDecorator(
                          argsPosition = ['self', 'files', 'localPath', 'targetSE' ], getActionArgsFunction = 'normal', directInsert = True )
   def putAndRegister( self, lfns, localPath, dstSE, exceptionFlag = False ):
     """ Take a local file and copy it to the dest storageElement and register the new file"""
@@ -223,8 +223,15 @@ class ClientACase ( DataLoggingArgumentsTestCase ):
     client.doSomething()
 
     # we get sequence from DataLoggingClient
-    sequenceOne = self.dlc.getSequenceByID( '1' )['Value'][0]
-    sequenceTwo = self.dlc.getSequenceByID( '2' )['Value'][0]
+    res = self.dlc.getSequenceByID( '1' )
+    if not res['OK']:
+      gLogger.error( res['Message'] )
+    sequenceOne = res['Value'][0]
+
+    res = self.dlc.getSequenceByID( '2' )
+    if not res['OK']:
+      gLogger.error( res['Message'] )
+    sequenceTwo = res['Value'][0]
 
     # we compare results
     self.assertEqual( len( sequenceOne.methodCalls ), 5 )
@@ -312,9 +319,15 @@ class ClientBCase ( DataLoggingArgumentsTestCase ):
     client = ClientB()
     client.doSomething()
 
-    # we get sequence from DataLoggingClient
-    sequenceOne = self.dlc.getSequenceByID( '3' )['Value'][0]
-    sequenceTwo = self.dlc.getSequenceByID( '4' )['Value'][0]
+    res = self.dlc.getSequenceByID( '3' )
+    if not res['OK']:
+      gLogger.error( res['Message'] )
+    sequenceOne = res['Value'][0]
+
+    res = self.dlc.getSequenceByID( '4' )
+    if not res['OK']:
+      gLogger.error( res['Message'] )
+    sequenceTwo = res['Value'][0]
 
     # we compare results
     self.assertEqual( len( sequenceOne.methodCalls ), 4 )
@@ -402,7 +415,10 @@ class ClientDCase ( DataLoggingArgumentsTestCase ):
     with self.assertRaises( Exception ):
       client.doSomething()
 
-    sequence = self.dlc.getSequenceByID( '6' )['Value'][0]
+    res = self.dlc.getSequenceByID( '6' )
+    if not res['OK']:
+      gLogger.error( res['Message'] )
+    sequence = res['Value'][0]
 
     self.assertEqual( len( sequence.methodCalls ), 4 )
 
