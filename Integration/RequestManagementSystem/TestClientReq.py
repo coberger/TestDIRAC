@@ -29,7 +29,7 @@ class ReqClientTestCase( unittest.TestCase ):
   def setUp( self ):
     """ test case set up """
 
-    gLogger.setLevel( 'DEBUG' )
+    gLogger.setLevel( 'INFO' )
 
     self.file = File()
     self.file.LFN = "/lhcb/user/c/cibak/testFile"
@@ -74,15 +74,6 @@ class ReqDB( ReqClientTestCase ):
 
   def test_db( self ):
 
-    """ table description """
-    tableDict = RequestDB.getTableMeta()
-    self.assertEqual( "Request" in tableDict, True )
-    self.assertEqual( "Operation" in tableDict, True )
-    self.assertEqual( "File" in tableDict, True )
-#     self.assertEqual( tableDict["Request"], Request.tableDesc() )
-#     self.assertEqual( tableDict["Operation"], Operation.tableDesc() )
-#     self.assertEqual( tableDict["File"], File.tableDesc() )
-
     # # empty DB at that stage
     ret = RequestDB().getDBSummary()
     self.assertEqual( ret,
@@ -92,9 +83,10 @@ class ReqDB( ReqClientTestCase ):
 
 class ReqClientMix( ReqClientTestCase ):
 
-  def test_fullChain( self ):
+  def test01fullChain( self ):
     put = self.requestClient.putRequest( self.request )
     self.assert_( put['OK'] )
+
     self.assertEqual( type( put['Value'] ), long )
     reqID = put['Value']
 
@@ -213,7 +205,7 @@ class ReqClientMix( ReqClientTestCase ):
       op += File( { "LFN": "/lhcb/user/c/cibak/foo" } )
       request += op
       put = db.putRequest( request )
-      self.assertEqual( put["OK"], True, "put failed" )
+      self.assertEqual( put["OK"], True )
       reqIDs.append( put['Value'] )
 
     loops = self.stressRequests // self.bulkRequest + ( 1 if ( self.stressRequests % self.bulkRequest ) else 0 )

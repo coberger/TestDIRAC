@@ -1,3 +1,6 @@
+""" Collection of user jobs for testing purposes
+"""
+
 from DIRAC.Core.Base.Script import parseCommandLine
 parseCommandLine()
 
@@ -6,10 +9,8 @@ import time
 
 from DIRAC import gLogger
 from DIRAC.Core.Security.ProxyInfo import getProxyInfo
-from DIRAC.Interfaces.API.Dirac import Dirac
-from DIRAC.Interfaces.API.Job import Job
 
-from TestDIRAC.Utilities.utils import find_all
+from TestDIRAC.Utilities.testJobDefinitions import helloWorld
 
 gLogger.setLevel( 'VERBOSE' )
 
@@ -19,8 +20,6 @@ class GridSubmissionTestCase( unittest.TestCase ):
   """ Base class for the Regression test cases
   """
   def setUp( self ):
-    self.dirac = Dirac()
-
     result = getProxyInfo()
     if result['Value']['group'] not in ['dirac_user']:
       print "GET A USER GROUP"
@@ -33,48 +32,9 @@ class submitSuccess( GridSubmissionTestCase ):
 
   def test_submit( self ):
 
-    print "**********************************************************************************************************"
-    gLogger.info( "\n Submitting hello world job" )
-
-    helloJ = Job()
-
-    helloJ.setName( "helloWorld-test-T2s" )
-    helloJ.setInputSandbox( [find_all( 'exe-script.py', '.', 'GridTestSubmission' )[0]] )
-
-    helloJ.setExecutable( "exe-script.py", "", "helloWorld.log" )
-
-    helloJ.setCPUTime( 17800 )
-    result = self.dirac.submit( helloJ )
-    gLogger.info( "Hello world job: ", result )
-
-    jobID = int( result['Value'] )
-    jobsSubmittedList.append( jobID )
-
-    self.assert_( result['OK'] )
-
-    print "**********************************************************************************************************"
-
-    gLogger.info( "\n Submitting a job that uploads an output" )
-
-    helloJ = Job()
-
-    helloJ.setName( "upload-Output-test" )
-    helloJ.setInputSandbox( [find_all( 'testFileUpload.txt', '.', 'GridTestSubmission' )[0]] )
-    helloJ.setExecutable( "exe-script.py", "", "helloWorld.log" )
-
-    helloJ.setCPUTime( 17800 )
-
-    helloJ.setOutputData( ['testFileUpload.txt'] )
-
-    result = self.dirac.submit( helloJ )
-    gLogger.info( "Hello world with output: ", result )
-
-    jobID = int( result['Value'] )
-    jobsSubmittedList.append( jobID )
-
-    self.assert_( result['OK'] )
-
-
+    res = helloWorld()
+    self.assert_( res['OK'] )
+    jobsSubmittedList.append( res['Value'] )
 
 
 # FIXME: This is also in the extension...? To try!

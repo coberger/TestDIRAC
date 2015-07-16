@@ -64,4 +64,109 @@ csAPI.setOption( 'Resources/StorageElements/ProductionSandboxSE/AccessProtocol.1
 csAPI.setOption( 'Resources/StorageElements/ProductionSandboxSE/AccessProtocol.1/Path', '%s/sandboxes' % setupName )
 csAPI.setOption( 'Resources/StorageElements/ProductionSandboxSE/AccessProtocol.1/Access', 'remote' )
 
+
+# Now setting a FileCatalogs section as the following:
+#     FileCatalogs
+#     {
+#       FileCatalog
+#       {
+#         AccessType = Read-Write
+#         Status = Active
+#         Master = True
+#       }
+#     }
+res = csAPI.createSection( 'Resources/FileCatalogs/' )
+if not res['OK']:
+  print res['Message']
+  exit( 1 )
+res = csAPI.createSection( 'Resources/FileCatalogs/FileCatalog' )
+if not res['OK']:
+  print res['Message']
+  exit( 1 )
+
+csAPI.setOption( 'Resources/FileCatalogs/FileCatalog/AccessType', 'Read-Write' )
+csAPI.setOption( 'Resources/FileCatalogs/FileCatalog/Status', 'Active' )
+csAPI.setOption( 'Resources/FileCatalogs/FileCatalog/Master', 'True' )
+
+
+# Now setting a RSS section as the following inside operations:
+#
+#     ResourceStatus
+#     {
+#       Policies
+#       {
+#         AlwaysActiveForResource
+#         {
+#           matchParams
+#           {
+#             element = Resource
+#           }
+#           policyType = AlwaysActive
+#         }
+#         AlwaysBannedForSE1SE2
+#         {
+#           matchParams
+#           {
+#             name = SE1,SE2
+#           }
+#           policyType = AlwaysBanned
+#         }
+#         AlwaysBannedForSite
+#         {
+#           matchParams
+#           {
+#             element = Site
+#           }
+#           policyType = AlwaysBanned
+#         }
+#       }
+#     }
+res = csAPI.createSection( 'Operations/' )
+if not res['OK']:
+  print res['Message']
+  exit( 1 )
+res = csAPI.createSection( 'Operations/ResourceStatus' )
+if not res['OK']:
+  print res['Message']
+  exit( 1 )
+res = csAPI.createSection( 'Operations/ResourceStatus/Policies' )
+if not res['OK']:
+  print res['Message']
+  exit( 1 )
+
+res = csAPI.createSection( 'Operations/ResourceStatus/Policies/AlwaysActiveForResource' )
+if not res['OK']:
+  print res['Message']
+  exit( 1 )
+csAPI.setOption( 'Operations/ResourceStatus/Policies/AlwaysActiveForResource/policyType', 'AlwaysActive' )
+res = csAPI.createSection( 'Operations/ResourceStatus/Policies/AlwaysActiveForResource/matchParams' )
+if not res['OK']:
+  print res['Message']
+  exit( 1 )
+csAPI.setOption( 'Operations/ResourceStatus/Policies/AlwaysActiveForResource/matchParams/element', 'Resource' )
+
+res = csAPI.createSection( 'Operations/ResourceStatus/Policies/AlwaysBannedForSE1SE2' )
+if not res['OK']:
+  print res['Message']
+  exit( 1 )
+csAPI.setOption( 'Operations/ResourceStatus/Policies/AlwaysBannedForSE1SE2/policyType', 'AlwaysBanned' )
+res = csAPI.createSection( 'Operations/ResourceStatus/Policies/AlwaysBannedForSE1SE2/matchParams' )
+if not res['OK']:
+  print res['Message']
+  exit( 1 )
+csAPI.setOption( 'Operations/ResourceStatus/Policies/AlwaysBannedForSE1SE2/matchParams/name', 'SE1,SE2' )
+
+res = csAPI.createSection( 'Operations/ResourceStatus/Policies/AlwaysBannedForSite' )
+if not res['OK']:
+  print res['Message']
+  exit( 1 )
+res = csAPI.createSection( 'Operations/ResourceStatus/Policies/AlwaysBannedForSite/matchParams' )
+csAPI.setOption( 'Operations/ResourceStatus/Policies/AlwaysBannedForSite/policyType', 'AlwaysBanned' )
+if not res['OK']:
+  print res['Message']
+  exit( 1 )
+csAPI.setOption( 'Operations/ResourceStatus/Policies/AlwaysBannedForSite/matchParams/element', 'Site' )
+
+
+# Final action: commit in CS
 csAPI.commit()

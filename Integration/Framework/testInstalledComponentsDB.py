@@ -8,11 +8,9 @@ from DIRAC.Core.Base.Script import parseCommandLine
 parseCommandLine()
 
 import unittest
-
 import datetime
-from DIRAC.FrameworkSystem.Client.ComponentMonitoringClient \
-      import ComponentMonitoringClient
-from DIRAC import gLogger, S_OK, S_ERROR
+
+from DIRAC.FrameworkSystem.Client.ComponentMonitoringClient import ComponentMonitoringClient
 
 class TestClientComponentMonitoring( unittest.TestCase ):
   """

@@ -61,8 +61,6 @@ class TQTests( TQDBTestCase ):
     self.assert_( result['OK'] )
     result = self.tqDB.recalculateTQSharesForAll()
     self.assert_( result['OK'] )
-    result = self.tqDB.modifyJobsPriorities( {} )
-    self.assert_( result['OK'] )
 
     # this will also remove the job
     result = self.tqDB.matchAndGetJob( {'Setup': 'aSetup', 'CPUTime': 300000} )

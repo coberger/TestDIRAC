@@ -47,7 +47,7 @@ class UserGroupCase( DFCTestCase ):
     """Testing the user related operations
        If you are an admin, you should be allowed to, if not, it should fail
 
-       CAUTION : THEY ARE DESIGNED FOR THE SecurityManager DirectorySecurityManagerWithDelete
+       CAUTION : THEY ARE DESIGNED FOR THE SecurityManager DirectorySecurityManagerWithDelete or VOMSPolicy
 
     """
 
@@ -83,7 +83,7 @@ class UserGroupCase( DFCTestCase ):
     """Testing the group related operations
            If you are an admin, you should be allowed to, if not, it should fail
 
-        CAUTION : THEY ARE DESIGNED FOR THE SecurityManager DirectorySecurityManagerWithDelete
+        CAUTION : THEY ARE DESIGNED FOR THE SecurityManager DirectorySecurityManagerWithDelete or VOMSPolicy
     """
 
     expectedRes = None
@@ -118,8 +118,14 @@ class FileCase( DFCTestCase ):
   def test_fileOperations( self ):
     """
       Tests the File related Operations
-      this test requires the SE to be properly defined in the CS -> NO IT DOES NOT!!
+      CAUTION : THEY ARE DESIGNED FOR THE SecurityManager DirectorySecurityManagerWithDelete or VOMSPolicy
+
     """
+    if isAdmin:
+      print "Running UserTest in admin mode"
+    else:
+      print "Running UserTest in non admin mode"
+
     # Adding a new file
     result = self.dfc.addFile( { testFile: { 'PFN': 'testfilePFN',
                                          'SE': 'testSE' ,
@@ -214,12 +220,22 @@ class FileCase( DFCTestCase ):
 
     result = self.dfc.changePathOwner( {testFile :  "toto", nonExistingFile : "tata"} )
     self.assert_( result["OK"], "changePathOwner failed: %s" % result )
-    self.assert_( testFile in result["Value"]["Successful"], "changePathOwner : %s should be in Successful %s" % ( testFile, result ) )
+
+    # Only admin can change path owner
+    if isAdmin:
+      self.assert_( testFile in result["Value"]["Successful"], "changePathOwner : %s should be in Successful %s" % ( testFile, result ) )
+    else:
+      self.assert_( testFile in result["Value"]["Failed"], "changePathOwner : %s should be in Failed %s" % ( testFile, result ) )
+      
     self.assert_( nonExistingFile in result["Value"]["Failed"], "changePathOwner : %s should be in Failed %s" % ( nonExistingFile, result ) )
 
+    # Only admin can change path group
     result = self.dfc.changePathGroup( {testFile : "toto", nonExistingFile :"tata"} )
     self.assert_( result["OK"], "changePathGroup failed: %s" % result )
-    self.assert_( testFile in result["Value"]["Successful"], "changePathGroup : %s should be in Successful %s" % ( testFile, result ) )
+    if isAdmin:
+      self.assert_( testFile in result["Value"]["Successful"], "changePathGroup : %s should be in Successful %s" % ( testFile, result ) )
+    else:
+      self.assert_( testFile in result["Value"]["Failed"], "changePathGroup : %s should be in Failed %s" % ( testFile, result ) )
     self.assert_( nonExistingFile in result["Value"]["Failed"], "changePathGroup : %s should be in Failed %s" % ( nonExistingFile, result ) )
 
     result = self.dfc.changePathMode( {testFile : 044, nonExistingFile : 044} )
@@ -236,7 +252,11 @@ class FileCase( DFCTestCase ):
     result = self.dfc.getFileMetadata( [testFile, nonExistingFile] )
     self.assert_( result["OK"], "getFileMetadata failed: %s" % result )
     self.assert_( testFile in result["Value"]["Successful"], "getFileMetadata : %s should be in Successful %s" % ( testFile, result ) )
-    self.assertEqual( result["Value"]["Successful"][testFile]["Owner"], "toto", "getFileMetadata got incorrect Owner %s" % result )
+
+    # The owner changed only if we are admin
+    if isAdmin:
+      self.assertEqual( result["Value"]["Successful"][testFile]["Owner"], "toto", "getFileMetadata got incorrect Owner %s" % result )
+
     self.assertEqual( result["Value"]["Successful"][testFile]["Status"], "AprioriGood", "getFileMetadata got incorrect status %s" % result )
     self.assert_( nonExistingFile in result["Value"]["Failed"], "getFileMetadata : %s should be in Failed %s" % ( nonExistingFile, result ) )
 
