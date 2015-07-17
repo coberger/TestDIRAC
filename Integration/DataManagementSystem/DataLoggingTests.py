@@ -13,7 +13,6 @@ from DIRAC.Core.Security.ProxyInfo import getProxyInfo
 from DIRAC.DataManagementSystem.Client.DataLoggingClient   import DataLoggingClient
 from DIRAC.DataManagementSystem.Client.DataLoggingDecorator  import DataLoggingDecorator
 
-from threading import Thread
 
 
 """
@@ -76,7 +75,8 @@ class TestStorageElement:
 
 class TestDataManager:
 
-  @DataLoggingDecorator( argsPosition = ['self', 'files', 'srcSE', 'targetSE', 'timeout'], getActionArgsFunction = 'normal', directInsert = True )
+  @DataLoggingDecorator( argsPosition = ['self', 'files', 'srcSE', 'targetSE', 'timeout'],
+                          getActionArgsFunction = 'normal', directInsert = True )
   def replicateAndRegister( self, lfns, srcSE, dstSE, timeout, protocol = 'srm' ):
     """ replicate a file from one se to the other and register the new replicas"""
     fc = TestFileCatalog()
@@ -104,8 +104,8 @@ class TestDataManager:
     return S_OK( {'Successful' : successful, 'Failed' : failed} )
 
 
-  @DataLoggingDecorator(
-                         argsPosition = ['self', 'files', 'localPath', 'targetSE' ], getActionArgsFunction = 'normal', directInsert = True )
+  @DataLoggingDecorator( argsPosition = ['self', 'files', 'localPath', 'targetSE' ],
+                         getActionArgsFunction = 'normal', directInsert = True )
   def putAndRegister( self, lfns, localPath, dstSE, exceptionFlag = False ):
     """ Take a local file and copy it to the dest storageElement and register the new file"""
     fc = TestFileCatalog()
@@ -132,7 +132,7 @@ class TestDataManager:
     return S_OK( {'Successful' : successful, 'Failed' : failed} )
 
 
-  @DataLoggingDecorator( argsPosition = ['self', 'tuple' ], getActionArgsFunction = 'tuple' , \
+  @DataLoggingDecorator( argsPosition = ['self', 'tuple' ], getActionArgsFunction = 'tuple' ,
                           tupleArgsPosition = ['files', 'physicalFile', 'fileSize', 'targetSE', 'fileGuid', 'checksum' ] )
   def registerFile( self, fileTuple, catalog = '' ):
     args = []
@@ -143,34 +143,23 @@ class TestDataManager:
     return S_OK( {'Successful' : s, 'Failed' : f} )
 
 
-class ClientA( Thread ):
+class ClientA( object ):
 
-  def __init__( self, lfn ):
-    Thread.__init__( self )
-    self.lfn = lfn
+  def __init__( self, lfns ):
+    self.lfns = lfns
 
   def doSomething( self ):
     dm = TestDataManager()
-    res = dm.replicateAndRegister( self.lfn, 'sourceSE', 'destSE', 1, protocol = 'aProtocol' )
-    res = TestStorageElement( 'sourceSE' ).getFileSize( self.lfn )
+    res = dm.replicateAndRegister( self.lfns, 'sourceSE', 'destSE', 1, protocol = 'aProtocol' )
+    res = TestStorageElement( 'sourceSE' ).getFileSize( self.lfns )
 
-  def run( self ):
-    self.doSomething()
-
-class ClientB( Thread ):
-
-  def __init__( self ):
-    Thread.__init__( self )
-
+class ClientB( object ):
 
   def doSomething( self ):
     dm = TestDataManager()
     res = dm.putAndRegister( ['/data/file1', '/data/file2', '/data/file3', '/data/file4'], '/local/path/', 'destSE' )
     s = res['Value']['Successful']
     res = TestFileCatalog().getFileSize( s )
-
-  def run( self ):
-    self.doSomething()
 
 
 class RaiseDecoratorException:
@@ -180,35 +169,20 @@ class RaiseDecoratorException:
     return S_OK( 5 )
 
 
-class ClientC( Thread ):
-
-  def __init__( self ):
-    Thread.__init__( self )
-
+class ClientC( object ):
 
   def doSomething( self ):
     rde = RaiseDecoratorException()
     res = rde.test()
     return res
 
-  def run( self ):
-    self.doSomething()
-
-class ClientD( Thread ):
-
-  def __init__( self ):
-    Thread.__init__( self )
-
+class ClientD( object ):
 
   def doSomething( self ):
     dm = TestDataManager()
     res = dm.putAndRegister( ['/data/file1', '/data/file2', '/data/file3', '/data/file4'], '/local/path/', 'destSE', exceptionFlag = True )
     s = res['Value']['Successful']
     res = TestFileCatalog().getFileSize( s )
-
-  def run( self ):
-    self.doSomething()
-
 
 class DataLoggingArgumentsTestCase( unittest.TestCase ):
   pass
@@ -224,11 +198,11 @@ class ClientACase ( DataLoggingArgumentsTestCase ):
 
     # we get sequence from DataLoggingClient
     res = self.dlc.getSequenceByID( '1' )
-    self.assertTrue( res['OK'], res['Message'] if 'Message' in res else 'OK' )
+    self.assertTrue( res['OK'], res.get( 'Message', 'OK' ) )
     sequenceOne = res['Value'][0]
 
     res = self.dlc.getSequenceByID( '2' )
-    self.assertTrue( res['OK'], res['Message'] if 'Message' in res else 'OK' )
+    self.assertTrue( res['OK'], res.get( 'Message', 'OK' ) )
     sequenceTwo = res['Value'][0]
 
     # we compare results
@@ -318,11 +292,11 @@ class ClientBCase ( DataLoggingArgumentsTestCase ):
     client.doSomething()
 
     res = self.dlc.getSequenceByID( '3' )
-    self.assertTrue( res['OK'], res['Message'] if 'Message' in res else 'OK' )
+    self.assertTrue( res['OK'], res.get( 'Message', 'OK' ) )
     sequenceOne = res['Value'][0]
 
     res = self.dlc.getSequenceByID( '4' )
-    self.assertTrue( res['OK'], res['Message'] if 'Message' in res else 'OK' )
+    self.assertTrue( res['OK'], res.get( 'Message', 'OK' ) )
     sequenceTwo = res['Value'][0]
 
     # we compare results
@@ -412,7 +386,7 @@ class ClientDCase ( DataLoggingArgumentsTestCase ):
       client.doSomething()
 
     res = self.dlc.getSequenceByID( '6' )
-    self.assertTrue( res['OK'], res['Message'] if 'Message' in res else 'OK' )
+    self.assertTrue( res['OK'], res.get( 'Message', 'OK' ) )
     sequence = res['Value'][0]
 
     self.assertEqual( len( sequence.methodCalls ), 4 )
