@@ -3,6 +3,10 @@ Created on May 22, 2015
 
 @author: Corentin Berger
 '''
+
+from DIRAC.Core.Base.Script import parseCommandLine
+parseCommandLine()
+
 import unittest
 import socket
 
