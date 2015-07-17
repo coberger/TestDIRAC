@@ -226,11 +226,13 @@ class ClientACase ( DataLoggingArgumentsTestCase ):
     res = self.dlc.getSequenceByID( '1' )
     if not res['OK']:
       gLogger.error( res['Message'] )
+    self.assertTrue( res['OK'] )
     sequenceOne = res['Value'][0]
 
     res = self.dlc.getSequenceByID( '2' )
     if not res['OK']:
       gLogger.error( res['Message'] )
+    self.assertTrue( res['OK'] )
     sequenceTwo = res['Value'][0]
 
     # we compare results
@@ -322,11 +324,13 @@ class ClientBCase ( DataLoggingArgumentsTestCase ):
     res = self.dlc.getSequenceByID( '3' )
     if not res['OK']:
       gLogger.error( res['Message'] )
+    self.assertTrue( res['OK'] )
     sequenceOne = res['Value'][0]
 
     res = self.dlc.getSequenceByID( '4' )
     if not res['OK']:
       gLogger.error( res['Message'] )
+    self.assertTrue( res['OK'] )
     sequenceTwo = res['Value'][0]
 
     # we compare results
@@ -418,6 +422,7 @@ class ClientDCase ( DataLoggingArgumentsTestCase ):
     res = self.dlc.getSequenceByID( '6' )
     if not res['OK']:
       gLogger.error( res['Message'] )
+    self.assertTrue( res['OK'] )
     sequence = res['Value'][0]
 
     self.assertEqual( len( sequence.methodCalls ), 4 )
