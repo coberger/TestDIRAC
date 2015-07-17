@@ -224,11 +224,11 @@ class ClientACase ( DataLoggingArgumentsTestCase ):
 
     # we get sequence from DataLoggingClient
     res = self.dlc.getSequenceByID( '1' )
-    self.assertTrue( res['OK'], 'Failed to get sequence from DataLoggingClient' )
+    self.assertTrue( res['OK'], res['Message'] if 'Message' in res else 'OK' )
     sequenceOne = res['Value'][0]
 
     res = self.dlc.getSequenceByID( '2' )
-    self.assertTrue( res['OK'], 'Failed to get sequence from DataLoggingClient' )
+    self.assertTrue( res['OK'], res['Message'] if 'Message' in res else 'OK' )
     sequenceTwo = res['Value'][0]
 
     # we compare results
@@ -318,11 +318,11 @@ class ClientBCase ( DataLoggingArgumentsTestCase ):
     client.doSomething()
 
     res = self.dlc.getSequenceByID( '3' )
-    self.assertTrue( res['OK'], 'Failed to get sequence from DataLoggingClient' )
+    self.assertTrue( res['OK'], res['Message'] if 'Message' in res else 'OK' )
     sequenceOne = res['Value'][0]
 
     res = self.dlc.getSequenceByID( '4' )
-    self.assertTrue( res['OK'], 'Failed to get sequence from DataLoggingClient' )
+    self.assertTrue( res['OK'], res['Message'] if 'Message' in res else 'OK' )
     sequenceTwo = res['Value'][0]
 
     # we compare results
@@ -412,7 +412,7 @@ class ClientDCase ( DataLoggingArgumentsTestCase ):
       client.doSomething()
 
     res = self.dlc.getSequenceByID( '6' )
-    self.assertTrue( res['OK'], 'Failed to get sequence from DataLoggingClient' )
+    self.assertTrue( res['OK'], res['Message'] if 'Message' in res else 'OK' )
     sequence = res['Value'][0]
 
     self.assertEqual( len( sequence.methodCalls ), 4 )
