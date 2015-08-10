@@ -10,7 +10,7 @@ parseCommandLine()
 import unittest
 import socket
 
-from DIRAC import S_OK, gLogger
+from DIRAC import S_OK
 
 from DIRAC.Core.Security.ProxyInfo import getProxyInfo
 
@@ -32,7 +32,7 @@ def splitIntoSuccFailed( lfns ):
 
 
 class TestFileCatalog:
-  @DataLoggingDecorator( argsPosition = ['self', 'files', 'targetSE'], getActionArgsFunction = 'normal' )
+  @DataLoggingDecorator( argsPosition = ['self', 'files', 'targetSE'] )
   def addFile( self, lfns, seName, exceptionFlag ):
     """Adding new file, registering them into seName"""
     if not exceptionFlag:
@@ -41,14 +41,14 @@ class TestFileCatalog:
       raise Exception( 'addFile exception' )
     return S_OK( {'Successful' : s, 'Failed' : f} )
 
-  @DataLoggingDecorator( argsPosition = ['self', 'files', 'targetSE' ], getActionArgsFunction = 'normal' )
+  @DataLoggingDecorator( argsPosition = ['self', 'files', 'targetSE' ] )
   def addReplica( self, lfns, seName ):
     """Adding new replica, registering them into seName"""
     self.getFileSize( lfns )
     s, f = splitIntoSuccFailed( lfns )
     return S_OK( {'Successful' : s, 'Failed' : f} )
 
-  @DataLoggingDecorator( argsPosition = ['self', 'files'], getActionArgsFunction = 'normal', directInsert = True )
+  @DataLoggingDecorator( argsPosition = ['self', 'files'], directInsert = True )
   def getFileSize( self, lfns ):
     """Getting file size"""
 
@@ -60,7 +60,7 @@ class TestStorageElement:
   def __init__( self, seName ):
     self.seName = seName
 
-  @DataLoggingDecorator( argsPosition = ['self', 'files', 'targetSE' ], getActionArgsFunction = 'normal' )
+  @DataLoggingDecorator( argsPosition = ['self', 'files', 'targetSE' ] )
   def putFile( self, lfns, src ):
     """Physicaly copying one file from src"""
     self.getFileSize( lfns )
@@ -68,7 +68,7 @@ class TestStorageElement:
 
     return S_OK( {'Successful' : s, 'Failed' : f} )
 
-  @DataLoggingDecorator( argsPosition = ['self', 'files'], getActionArgsFunction = 'normal', directInsert = True )
+  @DataLoggingDecorator( argsPosition = ['self', 'files'], directInsert = True )
   def getFileSize( self, lfns ):
     """Getting file size"""
 
@@ -230,54 +230,61 @@ class ClientACase ( DataLoggingArgumentsTestCase ):
       self.assertEqual( sequenceTwo.group.name, group )
 
     self.assertEqual( sequenceOne.caller.name, '__main__.ClientA.doSomething' )
+
+    sequenceOne.methodCalls[0].actions.sort( key = lambda x: x.file.name )
     self.assertEqual( sequenceOne.methodCalls[0].name.name, 'TestDataManager.replicateAndRegister' )
-    self.assertEqual( sequenceOne.methodCalls[0].actions[0].fileDL.name, '/data/file1' )
-    self.assertEqual( sequenceOne.methodCalls[0].actions[1].fileDL.name, '/data/file2' )
-    self.assertEqual( sequenceOne.methodCalls[0].actions[2].fileDL.name, '/data/file3' )
-    self.assertEqual( sequenceOne.methodCalls[0].actions[3].fileDL.name, '/data/file4' )
+    self.assertEqual( sequenceOne.methodCalls[0].actions[0].file.name, '/data/file1' )
+    self.assertEqual( sequenceOne.methodCalls[0].actions[1].file.name, '/data/file2' )
+    self.assertEqual( sequenceOne.methodCalls[0].actions[2].file.name, '/data/file3' )
+    self.assertEqual( sequenceOne.methodCalls[0].actions[3].file.name, '/data/file4' )
     self.assertEqual( sequenceOne.methodCalls[0].actions[0].status, 'Failed' )
     self.assertEqual( sequenceOne.methodCalls[0].actions[1].status, 'Failed' )
     self.assertEqual( sequenceOne.methodCalls[0].actions[2].status, 'Successful' )
     self.assertEqual( sequenceOne.methodCalls[0].actions[3].status, 'Failed' )
 
+    sequenceOne.methodCalls[1].actions.sort( key = lambda x: x.file.name )
     self.assertEqual( sequenceOne.methodCalls[1].name.name, 'TestFileCatalog.addReplica' )
-    self.assertEqual( sequenceOne.methodCalls[1].actions[0].fileDL.name, '/data/file3' )
-    self.assertEqual( sequenceOne.methodCalls[1].actions[1].fileDL.name, '/data/file1' )
-    self.assertEqual( sequenceOne.methodCalls[1].actions[0].status, 'Successful' )
-    self.assertEqual( sequenceOne.methodCalls[1].actions[1].status, 'Failed' )
+    self.assertEqual( sequenceOne.methodCalls[1].actions[0].file.name, '/data/file1' )
+    self.assertEqual( sequenceOne.methodCalls[1].actions[1].file.name, '/data/file3' )
+    self.assertEqual( sequenceOne.methodCalls[1].actions[0].status, 'Failed' )
+    self.assertEqual( sequenceOne.methodCalls[1].actions[1].status, 'Successful' )
 
+    sequenceOne.methodCalls[2].actions.sort( key = lambda x: x.file.name )
     self.assertEqual( sequenceOne.methodCalls[2].name.name, 'TestFileCatalog.getFileSize' )
-    self.assertEqual( sequenceOne.methodCalls[2].actions[0].fileDL.name, '/data/file3' )
-    self.assertEqual( sequenceOne.methodCalls[2].actions[1].fileDL.name, '/data/file1' )
-    self.assertEqual( sequenceOne.methodCalls[2].actions[0].status, 'Successful' )
-    self.assertEqual( sequenceOne.methodCalls[2].actions[1].status, 'Failed' )
+    self.assertEqual( sequenceOne.methodCalls[2].actions[0].file.name, '/data/file1' )
+    self.assertEqual( sequenceOne.methodCalls[2].actions[1].file.name, '/data/file3' )
+    self.assertEqual( sequenceOne.methodCalls[2].actions[0].status, 'Failed' )
+    self.assertEqual( sequenceOne.methodCalls[2].actions[1].status, 'Successful' )
 
+    sequenceOne.methodCalls[3].actions.sort( key = lambda x: x.file.name )
     self.assertEqual( sequenceOne.methodCalls[3].name.name, 'TestStorageElement.putFile' )
-    self.assertEqual( sequenceOne.methodCalls[3].actions[0].fileDL.name, '/data/file1' )
-    self.assertEqual( sequenceOne.methodCalls[3].actions[1].fileDL.name, '/data/file2' )
-    self.assertEqual( sequenceOne.methodCalls[3].actions[2].fileDL.name, '/data/file3' )
-    self.assertEqual( sequenceOne.methodCalls[3].actions[3].fileDL.name, '/data/file4' )
+    self.assertEqual( sequenceOne.methodCalls[3].actions[0].file.name, '/data/file1' )
+    self.assertEqual( sequenceOne.methodCalls[3].actions[1].file.name, '/data/file2' )
+    self.assertEqual( sequenceOne.methodCalls[3].actions[2].file.name, '/data/file3' )
+    self.assertEqual( sequenceOne.methodCalls[3].actions[3].file.name, '/data/file4' )
     self.assertEqual( sequenceOne.methodCalls[3].actions[0].status, 'Successful' )
     self.assertEqual( sequenceOne.methodCalls[3].actions[1].status, 'Failed' )
     self.assertEqual( sequenceOne.methodCalls[3].actions[2].status, 'Successful' )
     self.assertEqual( sequenceOne.methodCalls[3].actions[3].status, 'Failed' )
 
+    sequenceOne.methodCalls[4].actions.sort( key = lambda x: x.file.name )
     self.assertEqual( sequenceOne.methodCalls[4].name.name, 'TestStorageElement.getFileSize' )
-    self.assertEqual( sequenceOne.methodCalls[4].actions[0].fileDL.name, '/data/file1' )
-    self.assertEqual( sequenceOne.methodCalls[4].actions[1].fileDL.name, '/data/file2' )
-    self.assertEqual( sequenceOne.methodCalls[4].actions[2].fileDL.name, '/data/file3' )
-    self.assertEqual( sequenceOne.methodCalls[4].actions[3].fileDL.name, '/data/file4' )
+    self.assertEqual( sequenceOne.methodCalls[4].actions[0].file.name, '/data/file1' )
+    self.assertEqual( sequenceOne.methodCalls[4].actions[1].file.name, '/data/file2' )
+    self.assertEqual( sequenceOne.methodCalls[4].actions[2].file.name, '/data/file3' )
+    self.assertEqual( sequenceOne.methodCalls[4].actions[3].file.name, '/data/file4' )
     self.assertEqual( sequenceOne.methodCalls[4].actions[0].status, 'Successful' )
     self.assertEqual( sequenceOne.methodCalls[4].actions[1].status, 'Failed' )
     self.assertEqual( sequenceOne.methodCalls[4].actions[2].status, 'Successful' )
     self.assertEqual( sequenceOne.methodCalls[4].actions[3].status, 'Failed' )
 
+    sequenceTwo.methodCalls[0].actions.sort( key = lambda x: x.file.name )
     self.assertEqual( sequenceTwo.caller.name, '__main__.ClientA.doSomething' )
     self.assertEqual( sequenceTwo.methodCalls[0].name.name, 'TestStorageElement.getFileSize' )
-    self.assertEqual( sequenceTwo.methodCalls[0].actions[0].fileDL.name, '/data/file1' )
-    self.assertEqual( sequenceTwo.methodCalls[0].actions[1].fileDL.name, '/data/file2' )
-    self.assertEqual( sequenceTwo.methodCalls[0].actions[2].fileDL.name, '/data/file3' )
-    self.assertEqual( sequenceTwo.methodCalls[0].actions[3].fileDL.name, '/data/file4' )
+    self.assertEqual( sequenceTwo.methodCalls[0].actions[0].file.name, '/data/file1' )
+    self.assertEqual( sequenceTwo.methodCalls[0].actions[1].file.name, '/data/file2' )
+    self.assertEqual( sequenceTwo.methodCalls[0].actions[2].file.name, '/data/file3' )
+    self.assertEqual( sequenceTwo.methodCalls[0].actions[3].file.name, '/data/file4' )
     self.assertEqual( sequenceTwo.methodCalls[0].actions[0].status, 'Successful' )
     self.assertEqual( sequenceTwo.methodCalls[0].actions[1].status, 'Failed' )
     self.assertEqual( sequenceTwo.methodCalls[0].actions[2].status, 'Successful' )
@@ -326,45 +333,51 @@ class ClientBCase ( DataLoggingArgumentsTestCase ):
       self.assertEqual( sequenceTwo.group.name, group )
 
     self.assertEqual( sequenceOne.caller.name, '__main__.ClientB.doSomething' )
+
+    sequenceOne.methodCalls[0].actions.sort( key = lambda x: x.file.name )
     self.assertEqual( sequenceOne.methodCalls[0].name.name, 'TestDataManager.putAndRegister' )
-    self.assertEqual( sequenceOne.methodCalls[0].actions[0].fileDL.name, '/data/file1' )
-    self.assertEqual( sequenceOne.methodCalls[0].actions[1].fileDL.name, '/data/file2' )
-    self.assertEqual( sequenceOne.methodCalls[0].actions[2].fileDL.name, '/data/file3' )
-    self.assertEqual( sequenceOne.methodCalls[0].actions[3].fileDL.name, '/data/file4' )
+    self.assertEqual( sequenceOne.methodCalls[0].actions[0].file.name, '/data/file1' )
+    self.assertEqual( sequenceOne.methodCalls[0].actions[1].file.name, '/data/file2' )
+    self.assertEqual( sequenceOne.methodCalls[0].actions[2].file.name, '/data/file3' )
+    self.assertEqual( sequenceOne.methodCalls[0].actions[3].file.name, '/data/file4' )
     self.assertEqual( sequenceOne.methodCalls[0].actions[0].status, 'Failed' )
     self.assertEqual( sequenceOne.methodCalls[0].actions[1].status, 'Failed' )
     self.assertEqual( sequenceOne.methodCalls[0].actions[2].status, 'Successful' )
     self.assertEqual( sequenceOne.methodCalls[0].actions[3].status, 'Failed' )
 
+    sequenceOne.methodCalls[1].actions.sort( key = lambda x: x.file.name )
     self.assertEqual( sequenceOne.methodCalls[1].name.name, 'TestFileCatalog.addFile' )
-    self.assertEqual( sequenceOne.methodCalls[1].actions[0].fileDL.name, '/data/file3' )
-    self.assertEqual( sequenceOne.methodCalls[1].actions[1].fileDL.name, '/data/file1' )
-    self.assertEqual( sequenceOne.methodCalls[1].actions[0].status, 'Successful' )
-    self.assertEqual( sequenceOne.methodCalls[1].actions[1].status, 'Failed' )
+    self.assertEqual( sequenceOne.methodCalls[1].actions[0].file.name, '/data/file1' )
+    self.assertEqual( sequenceOne.methodCalls[1].actions[1].file.name, '/data/file3' )
+    self.assertEqual( sequenceOne.methodCalls[1].actions[0].status, 'Failed' )
+    self.assertEqual( sequenceOne.methodCalls[1].actions[1].status, 'Successful' )
 
+    sequenceOne.methodCalls[2].actions.sort( key = lambda x: x.file.name )
     self.assertEqual( sequenceOne.methodCalls[2].name.name, 'TestStorageElement.putFile' )
-    self.assertEqual( sequenceOne.methodCalls[2].actions[0].fileDL.name, '/data/file1' )
-    self.assertEqual( sequenceOne.methodCalls[2].actions[1].fileDL.name, '/data/file2' )
-    self.assertEqual( sequenceOne.methodCalls[2].actions[2].fileDL.name, '/data/file3' )
-    self.assertEqual( sequenceOne.methodCalls[2].actions[3].fileDL.name, '/data/file4' )
+    self.assertEqual( sequenceOne.methodCalls[2].actions[0].file.name, '/data/file1' )
+    self.assertEqual( sequenceOne.methodCalls[2].actions[1].file.name, '/data/file2' )
+    self.assertEqual( sequenceOne.methodCalls[2].actions[2].file.name, '/data/file3' )
+    self.assertEqual( sequenceOne.methodCalls[2].actions[3].file.name, '/data/file4' )
     self.assertEqual( sequenceOne.methodCalls[2].actions[0].status, 'Successful' )
     self.assertEqual( sequenceOne.methodCalls[2].actions[1].status, 'Failed' )
     self.assertEqual( sequenceOne.methodCalls[2].actions[2].status, 'Successful' )
     self.assertEqual( sequenceOne.methodCalls[2].actions[3].status, 'Failed' )
 
+    sequenceOne.methodCalls[3].actions.sort( key = lambda x: x.file.name )
     self.assertEqual( sequenceOne.methodCalls[3].name.name, 'TestStorageElement.getFileSize' )
-    self.assertEqual( sequenceOne.methodCalls[3].actions[0].fileDL.name, '/data/file1' )
-    self.assertEqual( sequenceOne.methodCalls[3].actions[1].fileDL.name, '/data/file2' )
-    self.assertEqual( sequenceOne.methodCalls[3].actions[2].fileDL.name, '/data/file3' )
-    self.assertEqual( sequenceOne.methodCalls[3].actions[3].fileDL.name, '/data/file4' )
+    self.assertEqual( sequenceOne.methodCalls[3].actions[0].file.name, '/data/file1' )
+    self.assertEqual( sequenceOne.methodCalls[3].actions[1].file.name, '/data/file2' )
+    self.assertEqual( sequenceOne.methodCalls[3].actions[2].file.name, '/data/file3' )
+    self.assertEqual( sequenceOne.methodCalls[3].actions[3].file.name, '/data/file4' )
     self.assertEqual( sequenceOne.methodCalls[3].actions[0].status, 'Successful' )
     self.assertEqual( sequenceOne.methodCalls[3].actions[1].status, 'Failed' )
     self.assertEqual( sequenceOne.methodCalls[3].actions[2].status, 'Successful' )
     self.assertEqual( sequenceOne.methodCalls[3].actions[3].status, 'Failed' )
 
+    sequenceTwo.methodCalls[0].actions.sort( key = lambda x: x.file.name )
     self.assertEqual( sequenceTwo.caller.name, '__main__.ClientB.doSomething' )
     self.assertEqual( sequenceTwo.methodCalls[0].name.name, 'TestFileCatalog.getFileSize' )
-    self.assertEqual( sequenceTwo.methodCalls[0].actions[0].fileDL.name, '/data/file3' )
+    self.assertEqual( sequenceTwo.methodCalls[0].actions[0].file.name, '/data/file3' )
     self.assertEqual( sequenceTwo.methodCalls[0].actions[0].status, 'Successful' )
 
 
@@ -411,11 +424,13 @@ class ClientDCase ( DataLoggingArgumentsTestCase ):
       self.assertEqual( sequence.group.name, group )
 
     self.assertEqual( sequence.caller.name, '__main__.ClientD.doSomething' )
+
+    sequence.methodCalls[0].actions.sort( key = lambda x: x.file.name )
     self.assertEqual( sequence.methodCalls[0].name.name, 'TestDataManager.putAndRegister' )
-    self.assertEqual( sequence.methodCalls[0].actions[0].fileDL.name, '/data/file1' )
-    self.assertEqual( sequence.methodCalls[0].actions[1].fileDL.name, '/data/file2' )
-    self.assertEqual( sequence.methodCalls[0].actions[2].fileDL.name, '/data/file3' )
-    self.assertEqual( sequence.methodCalls[0].actions[3].fileDL.name, '/data/file4' )
+    self.assertEqual( sequence.methodCalls[0].actions[0].file.name, '/data/file1' )
+    self.assertEqual( sequence.methodCalls[0].actions[1].file.name, '/data/file2' )
+    self.assertEqual( sequence.methodCalls[0].actions[2].file.name, '/data/file3' )
+    self.assertEqual( sequence.methodCalls[0].actions[3].file.name, '/data/file4' )
     self.assertEqual( sequence.methodCalls[0].actions[0].status, 'Failed' )
     self.assertEqual( sequence.methodCalls[0].actions[1].status, 'Failed' )
     self.assertEqual( sequence.methodCalls[0].actions[2].status, 'Failed' )
@@ -425,30 +440,32 @@ class ClientDCase ( DataLoggingArgumentsTestCase ):
     self.assertEqual( sequence.methodCalls[0].actions[2].errorMessage, 'addFile exception' )
     self.assertEqual( sequence.methodCalls[0].actions[3].errorMessage, 'addFile exception' )
 
-
+    sequence.methodCalls[1].actions.sort( key = lambda x: x.file.name )
     self.assertEqual( sequence.methodCalls[1].name.name, 'TestFileCatalog.addFile' )
-    self.assertEqual( sequence.methodCalls[1].actions[0].fileDL.name, '/data/file3' )
-    self.assertEqual( sequence.methodCalls[1].actions[1].fileDL.name, '/data/file1' )
+    self.assertEqual( sequence.methodCalls[1].actions[0].file.name, '/data/file1' )
+    self.assertEqual( sequence.methodCalls[1].actions[1].file.name, '/data/file3' )
     self.assertEqual( sequence.methodCalls[1].actions[0].status, 'Failed' )
     self.assertEqual( sequence.methodCalls[1].actions[1].status, 'Failed' )
     self.assertEqual( sequence.methodCalls[1].actions[0].errorMessage, 'addFile exception' )
     self.assertEqual( sequence.methodCalls[1].actions[1].errorMessage, 'addFile exception' )
 
+    sequence.methodCalls[2].actions.sort( key = lambda x: x.file.name )
     self.assertEqual( sequence.methodCalls[2].name.name, 'TestStorageElement.putFile' )
-    self.assertEqual( sequence.methodCalls[2].actions[0].fileDL.name, '/data/file1' )
-    self.assertEqual( sequence.methodCalls[2].actions[1].fileDL.name, '/data/file2' )
-    self.assertEqual( sequence.methodCalls[2].actions[2].fileDL.name, '/data/file3' )
-    self.assertEqual( sequence.methodCalls[2].actions[3].fileDL.name, '/data/file4' )
+    self.assertEqual( sequence.methodCalls[2].actions[0].file.name, '/data/file1' )
+    self.assertEqual( sequence.methodCalls[2].actions[1].file.name, '/data/file2' )
+    self.assertEqual( sequence.methodCalls[2].actions[2].file.name, '/data/file3' )
+    self.assertEqual( sequence.methodCalls[2].actions[3].file.name, '/data/file4' )
     self.assertEqual( sequence.methodCalls[2].actions[0].status, 'Successful' )
     self.assertEqual( sequence.methodCalls[2].actions[1].status, 'Failed' )
     self.assertEqual( sequence.methodCalls[2].actions[2].status, 'Successful' )
     self.assertEqual( sequence.methodCalls[2].actions[3].status, 'Failed' )
 
+    sequence.methodCalls[3].actions.sort( key = lambda x: x.file.name )
     self.assertEqual( sequence.methodCalls[3].name.name, 'TestStorageElement.getFileSize' )
-    self.assertEqual( sequence.methodCalls[3].actions[0].fileDL.name, '/data/file1' )
-    self.assertEqual( sequence.methodCalls[3].actions[1].fileDL.name, '/data/file2' )
-    self.assertEqual( sequence.methodCalls[3].actions[2].fileDL.name, '/data/file3' )
-    self.assertEqual( sequence.methodCalls[3].actions[3].fileDL.name, '/data/file4' )
+    self.assertEqual( sequence.methodCalls[3].actions[0].file.name, '/data/file1' )
+    self.assertEqual( sequence.methodCalls[3].actions[1].file.name, '/data/file2' )
+    self.assertEqual( sequence.methodCalls[3].actions[2].file.name, '/data/file3' )
+    self.assertEqual( sequence.methodCalls[3].actions[3].file.name, '/data/file4' )
     self.assertEqual( sequence.methodCalls[3].actions[0].status, 'Successful' )
     self.assertEqual( sequence.methodCalls[3].actions[1].status, 'Failed' )
     self.assertEqual( sequence.methodCalls[3].actions[2].status, 'Successful' )
