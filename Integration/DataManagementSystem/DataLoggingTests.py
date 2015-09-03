@@ -9,8 +9,10 @@ parseCommandLine()
 
 import unittest
 import socket
+import errno
 
 from DIRAC import S_OK
+from DIRAC import DError
 
 from DIRAC.Core.Security.ProxyInfo import getProxyInfo
 
@@ -78,9 +80,11 @@ class TestStorageElement:
 
 
 class TestDataManager:
+  @DataLoggingDecorator( argsPosition = ['self', 'files'], directInsert = True )
+  def derror( self, lfns ):
+    return DError( errno.ENOENT, 'the interesting technical message' )
 
-  @DataLoggingDecorator( argsPosition = ['self', 'files', 'srcSE', 'targetSE', 'timeout'],
-                          getActionArgsFunction = 'normal', directInsert = True )
+  @DataLoggingDecorator( argsPosition = ['self', 'files', 'srcSE', 'targetSE', 'timeout'], directInsert = True )
   def replicateAndRegister( self, lfns, srcSE, dstSE, timeout, protocol = 'srm' ):
     """ replicate a file from one se to the other and register the new replicas"""
     fc = TestFileCatalog()
@@ -108,8 +112,7 @@ class TestDataManager:
     return S_OK( {'Successful' : successful, 'Failed' : failed} )
 
 
-  @DataLoggingDecorator( argsPosition = ['self', 'files', 'localPath', 'targetSE' ],
-                         getActionArgsFunction = 'normal', directInsert = True )
+  @DataLoggingDecorator( argsPosition = ['self', 'files', 'localPath', 'targetSE' ], directInsert = True )
   def putAndRegister( self, lfns, localPath, dstSE, exceptionFlag = False ):
     """ Take a local file and copy it to the dest storageElement and register the new file"""
     fc = TestFileCatalog()
@@ -136,7 +139,7 @@ class TestDataManager:
     return S_OK( {'Successful' : successful, 'Failed' : failed} )
 
 
-  @DataLoggingDecorator( argsPosition = ['self', 'tuple' ], getActionArgsFunction = 'tuple' ,
+  @DataLoggingDecorator( argsPosition = ['self', 'tuple' ], getActionArgsFunction = 'Tuple' ,
                           tupleArgsPosition = ['files', 'physicalFile', 'fileSize', 'targetSE', 'fileGuid', 'checksum' ] )
   def registerFile( self, fileTuple, catalog = '' ):
     args = []
@@ -187,6 +190,12 @@ class ClientD( object ):
     res = dm.putAndRegister( ['/data/file1', '/data/file2', '/data/file3', '/data/file4'], '/local/path/', 'destSE', exceptionFlag = True )
     s = res['Value']['Successful']
     res = TestFileCatalog().getFileSize( s )
+
+class ClientE( object ):
+
+  def doSomething( self ):
+    dm = TestDataManager()
+    dm.derror( ['/data/file1', '/data/file2', '/data/file3', '/data/file4'] )
 
 class DataLoggingArgumentsTestCase( unittest.TestCase ):
   pass
@@ -472,10 +481,64 @@ class ClientDCase ( DataLoggingArgumentsTestCase ):
     self.assertEqual( sequence.methodCalls[3].actions[3].status, 'Failed' )
 
 
+class ClientECase ( DataLoggingArgumentsTestCase ):
+  # this client raise an exception from a decorate method, the exception should be raise by the decorator
+  def setUp( self ):
+    self.dlc = DataLoggingClient()
+
+  def test_no_exception( self ):
+    client = ClientE()
+    client.doSomething()
+
+    res = self.dlc.getSequenceByID( '7' )
+    self.assertTrue( res['OK'], res.get( 'Message', 'OK' ) )
+    sequence = res['Value'][0]
+
+    self.assertEqual( len( sequence.methodCalls ), 1 )
+
+    hostName = socket.gethostname()
+    self.assertEqual( sequence.hostName.name, hostName )
+
+    proxyInfo = getProxyInfo()
+    if proxyInfo['OK']:
+      proxyInfo = proxyInfo['Value']
+      userName = proxyInfo.get( 'username' )
+      group = proxyInfo.get( 'group' )
+
+    if userName :
+      self.assertEqual( sequence.userName.name, userName )
+
+    if group :
+      self.assertEqual( sequence.group.name, group )
+
+    self.assertEqual( sequence.caller.name, '__main__.ClientE.doSomething' )
+
+    sequence.methodCalls[0].actions.sort( key = lambda x: x.file.name )
+    self.assertEqual( sequence.methodCalls[0].name.name, 'TestDataManager.derror' )
+    self.assertEqual( sequence.methodCalls[0].actions[0].file.name, '/data/file1' )
+    self.assertEqual( sequence.methodCalls[0].actions[1].file.name, '/data/file2' )
+    self.assertEqual( sequence.methodCalls[0].actions[2].file.name, '/data/file3' )
+    self.assertEqual( sequence.methodCalls[0].actions[3].file.name, '/data/file4' )
+    self.assertEqual( sequence.methodCalls[0].actions[0].status, 'Failed' )
+    self.assertEqual( sequence.methodCalls[0].actions[1].status, 'Failed' )
+    self.assertEqual( sequence.methodCalls[0].actions[2].status, 'Failed' )
+    self.assertEqual( sequence.methodCalls[0].actions[3].status, 'Failed' )
+    self.assertEqual( sequence.methodCalls[0].actions[0].errorCode, 2 )
+    self.assertEqual( sequence.methodCalls[0].actions[1].errorCode, 2 )
+    self.assertEqual( sequence.methodCalls[0].actions[2].errorCode, 2 )
+    self.assertEqual( sequence.methodCalls[0].actions[3].errorCode, 2 )
+    self.assertEqual( sequence.methodCalls[0].actions[0].errorMessage, 'No such file or directory ( 2 : the interesting technical message)' )
+    self.assertEqual( sequence.methodCalls[0].actions[1].errorMessage, 'No such file or directory ( 2 : the interesting technical message)' )
+    self.assertEqual( sequence.methodCalls[0].actions[2].errorMessage, 'No such file or directory ( 2 : the interesting technical message)' )
+    self.assertEqual( sequence.methodCalls[0].actions[3].errorMessage, 'No such file or directory ( 2 : the interesting technical message)' )
+
+
+
 if __name__ == "__main__":
 
   suite = unittest.defaultTestLoader.loadTestsFromTestCase( ClientACase )
   suite.addTest( unittest.defaultTestLoader.loadTestsFromTestCase( ClientBCase ) )
   suite.addTest( unittest.defaultTestLoader.loadTestsFromTestCase( ClientCCase ) )
   suite.addTest( unittest.defaultTestLoader.loadTestsFromTestCase( ClientDCase ) )
+  suite.addTest( unittest.defaultTestLoader.loadTestsFromTestCase( ClientECase ) )
   testResult = unittest.TextTestRunner( verbosity = 2 ).run( suite )
