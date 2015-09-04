@@ -88,6 +88,37 @@ csAPI.setOption( 'Resources/FileCatalogs/FileCatalog/AccessType', 'Read-Write' )
 csAPI.setOption( 'Resources/FileCatalogs/FileCatalog/Status', 'Active' )
 csAPI.setOption( 'Resources/FileCatalogs/FileCatalog/Master', 'True' )
 
+# Now setting a the following option:
+#     Resources
+#     {
+#       Sites
+#       {
+#         DIRAC
+#         {
+#           DIRAC.Jenkins.org
+#           {
+#             CEs
+#             {
+#               some.CE.org
+#               {
+#                 CEType = SSH
+#               }
+#             }
+#           }
+#         }
+#       }
+
+res = csAPI.createSection( 'Resources/Sites/DIRAC/DIRAC.Jenkins.org/CEs/' )
+if not res['OK']:
+  print res['Message']
+  exit( 1 )
+res = csAPI.createSection( 'Resources/Sites/DIRAC/DIRAC.Jenkins.org/CEs/some.CE.org/' )
+if not res['OK']:
+  print res['Message']
+  exit( 1 )
+
+csAPI.setOption( 'Resources/Sites/DIRAC/DIRAC.Jenkins.org/CEs/some.CE.org/CEType', 'SSH' )
+
 
 # Now setting a RSS section as the following inside operations:
 #

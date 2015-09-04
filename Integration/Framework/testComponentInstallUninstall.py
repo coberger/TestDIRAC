@@ -15,6 +15,8 @@ from DIRAC.Core.Utilities.InstallTools import setMySQLPasswords
 from DIRAC.ConfigurationSystem.Client.CSAPI import CSAPI
 from DIRAC.FrameworkSystem.Client.ComponentMonitoringClient import ComponentMonitoringClient
 from DIRAC.FrameworkSystem.Client.SystemAdministratorClientCLI import SystemAdministratorClientCLI
+from DIRAC.Core.Security.ProxyInfo import getProxyInfo
+from DIRAC.ConfigurationSystem.Client.Helpers.Registry import getUsernameForDN
 
 class TestComponentInstallation( unittest.TestCase ):
   """
@@ -41,6 +43,24 @@ class TestComponentInstallation( unittest.TestCase ):
     self.rootPwd = cfg.getOption( 'Systems/Databases/Password' )
     self.diracPwd = self.rootPwd
 
+    result = getProxyInfo()
+    if not result[ 'OK' ]:
+      raise Exception( result[ 'Message' ] )
+    chain = result[ 'Value' ][ 'chain' ]
+    result = chain.getCertInChain( -1 )
+    if not result[ 'OK' ]:
+      raise Exception( result[ 'Message' ] )
+    result = result[ 'Value' ].getSubjectDN()
+    if not result[ 'OK' ]:
+      raise Exception( result[ 'Message' ] )
+    userDN = result['Value']
+    result = getUsernameForDN( userDN )
+    if not result[ 'OK' ]:
+      raise Exception( result[ 'Message' ] )
+    self.user = result[ 'Value' ]
+    if not self.user:
+      self.user = 'unknown'
+
   def tearDown( self ):
     pass
 
@@ -60,7 +80,7 @@ class ComponentInstallationChain( TestComponentInstallation ):
     self.assert_( cfg.getOption( 'Systems/Framework/' + self.frameworkSetup + '/URLs/Notification' ) == 'dips://' + self.host + ':' + str( self.notificationPort ) + '/Framework/Notification' )
 
     # Check installation in database
-    result = self.monitoringClient.getInstallations( { 'Instance': 'Notification', 'UnInstallationTime': None },
+    result = self.monitoringClient.getInstallations( { 'Instance': 'Notification', 'UnInstallationTime': None, 'InstalledBy': self.user },
                                                       { 'System': 'Framework', 'Type': 'service', 'Module': 'Notification' },
                                                       {}, False )
 
@@ -104,7 +124,7 @@ class ComponentInstallationChain( TestComponentInstallation ):
     self.assert_( cfg.isSection( 'Systems/DataManagement/' + self.frameworkSetup + '/Databases/FTSDB/' ) )
 
     # Check in database
-    result = self.monitoringClient.getInstallations( { 'Instance': 'FTSDB', 'UnInstallationTime': None },
+    result = self.monitoringClient.getInstallations( { 'Instance': 'FTSDB', 'UnInstallationTime': None, 'InstalledBy': self.user },
                                                       { 'System': 'DataManagement', 'Type': 'DB', 'Module': 'FTSDB' },
                                                       {}, False )
     self.assert_( result[ 'OK' ] and len( result[ 'Value' ] ) == 1 )

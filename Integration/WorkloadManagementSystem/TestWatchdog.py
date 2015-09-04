@@ -1,3 +1,5 @@
+# FIXME: to bring back to life
+
 import unittest, os, threading, time
 
 from DIRAC.Core.Base import Script

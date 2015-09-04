@@ -1,16 +1,12 @@
+# FIXME: to bring back to life
+
 """  This class fills the main and auxiliary tables of the Logging Database.
     It provides the functions:
         FillMesssageRepository()
 """
-import re, os, sys, string
 from random import randrange
-from time import localtime,strftime
-from dirac import DIRAC
+import DIRAC
 
-from DIRAC.Core.Utilities.ClassAd.ClassAdLight import ClassAd
-from types import *
-from DIRAC import gLogger, gConfig, S_OK, S_ERROR
-from DIRAC.Core.Base.DB import DB
 from DIRAC.Core.Utilities.Time import dateTime, toString, hour, second, minute
 from DIRAC.FrameworkSystem.private.logging.Message import tupleToMessage
 from DIRAC.FrameworkSystem.DB.SystemLoggingDB import SystemLoggingDB
@@ -60,7 +56,7 @@ class MessageLoggingDB_fill(SystemLoggingDB):
                   'ERROR', 'EXCEPT', 'FATAL' ]
     initialDate=dateTime()
 
-    for i in range(1,800):
+    for _i in range( 1, 800 ):
       limitDate = toString( initialDate - randrange(0,1680) * hour -
                             randrange( 0, 60) * minute -
                             randrange( 0, 60) * second )

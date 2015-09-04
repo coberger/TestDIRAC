@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 
 # FIXME: it has to be seen if this is any useful
+# FIXME: to bring back to life
 
 from DIRAC.Core.Base.Script                             import parseCommandLine
 parseCommandLine()

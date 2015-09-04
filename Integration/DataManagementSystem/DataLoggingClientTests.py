@@ -1,3 +1,5 @@
+# FIXME: to bring back to life
+
 # ########################################################################
 # # File: DataLoggingClientTests.py
 # # Author: Krzysztof.Ciba@NOSPAMgmail.com

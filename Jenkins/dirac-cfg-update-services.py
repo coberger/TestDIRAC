@@ -51,6 +51,7 @@ for sct in ['Systems/DataManagement/Production/Services',
 
 csAPI.setOption( 'Systems/DataManagement/Production/Services/FileCatalog/DirectoryManager', 'DirectoryClosure' )
 csAPI.setOption( 'Systems/DataManagement/Production/Services/FileCatalog/FileManager', 'FileManagerPs' )
+csAPI.setOption( 'Systems/DataManagement/Production/Services/FileCatalog/OldSecurityManager', 'DirectorySecurityManagerWithDelete' )
 csAPI.setOption( 'Systems/DataManagement/Production/Services/FileCatalog/SecurityManager', 'PolicyBasedSecurityManager' )
 csAPI.setOption( 'Systems/DataManagement/Production/Services/FileCatalog/SecurityPolicy', 'DIRAC/DataManagementSystem/DB/FileCatalogComponents/SecurityPolicies/VOMSPolicy' )
 csAPI.setOption( 'Systems/DataManagement/Production/Services/FileCatalog/UniqueGUID', True )

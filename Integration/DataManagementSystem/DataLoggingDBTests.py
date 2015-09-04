@@ -1,3 +1,5 @@
+# FIXME: to bring back to life
+
 # ########################################################################
 # # $HeadURL $
 # # File: DataLoggingDBTests.py

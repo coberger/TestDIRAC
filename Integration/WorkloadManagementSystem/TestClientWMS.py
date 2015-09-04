@@ -369,9 +369,6 @@ class WMSAdministrator( TestWMSTestCase ):
     self.assert_( res['OK'] )
     self.assertEqual( res['Value']['My.Site.org'], 'Active' )
 
-    res = wmsAdministrator.getUserSummaryWeb( {}, [], 0, 100 )
-    self.assert_( res['OK'] )
-    self.assert_( res['Value']['TotalRecords'] in [0, 1] )
     res = wmsAdministrator.getSiteSummaryWeb( {}, [], 0, 100 )
     self.assert_( res['OK'] )
     self.assert_( res['Value']['TotalRecords'] in [0, 1, 2, 34] )

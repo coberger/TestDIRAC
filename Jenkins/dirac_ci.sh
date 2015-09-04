@@ -54,7 +54,13 @@ function installSite(){
 	#Fixing install.cfg file
 	cp $(eval echo $INSTALL_CFG_FILE) .
 	sed -i s/VAR_Release/$projectVersion/g $WORKSPACE/DIRAC/install.cfg
-	sed -i s/VAR_LcgVer/$externalsVersion/g $WORKSPACE/DIRAC/install.cfg
+	if [ ! -z "$LcgVer" ]
+	then
+		echo 'Fixing LcgVer to ' $LcgVer
+		sed -i s/VAR_LcgVer/$LcgVer/g $WORKSPACE/DIRAC/install.cfg
+	else
+		sed -i s/VAR_LcgVer/$externalsVersion/g $WORKSPACE/DIRAC/install.cfg
+	fi
 	sed -i s,VAR_TargetPath,$WORKSPACE,g $WORKSPACE/DIRAC/install.cfg
 	fqdn=`hostname --fqdn`
 	sed -i s,VAR_HostDN,$fqdn,g $WORKSPACE/DIRAC/install.cfg
@@ -115,6 +121,12 @@ function fullInstallDIRAC(){
 	#create groups
 	diracUserAndGroup
 
+	echo 'Restarting Framework ProxyManager'
+	dirac-restart-component Framework ProxyManager $DEBUG
+	
+	echo 'Restarting Framework ComponentMonitoring'
+	dirac-restart-component Framework ComponentMonitoring $DEBUG
+
 	#Now all the rest	
 
 	#DBs (not looking for FrameworkSystem ones, already installed)
@@ -137,7 +149,7 @@ function fullInstallDIRAC(){
 	#fix the services 
 	python $WORKSPACE/TestDIRAC/Jenkins/dirac-cfg-update-services.py $WORKSPACE $DEBUG
 	
-	#fix the SandboxStore 
+	#fix the SandboxStore and other stuff
 	python $WORKSPACE/TestDIRAC/Jenkins/dirac-cfg-update-server.py $WORKSPACE $DEBUG
 
 	echo 'Restarting WorkloadManagement SandboxStore'
@@ -145,6 +157,12 @@ function fullInstallDIRAC(){
 
 	echo 'Restarting DataManagement FileCatalog'
 	dirac-restart-component DataManagement FileCatalog $DEBUG
+
+	#agents
+	findAgents
+	diracAgents
+
+
 }
 
 

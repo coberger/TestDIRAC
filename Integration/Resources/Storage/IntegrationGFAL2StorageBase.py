@@ -5,11 +5,11 @@ Plugins:
 
 To run the test following plugins are needed:
 
-gfal2-2.8.1-1
-gfal2-plugin-xrootd-0.2.2-2
-gfal2-python-1.6.0-1
-Storage element:
+gfal2-2.9.3
+gfal2-plugin-xrootd-0.4.0
+gfal2-python-1.8.3
 
+Storage element:
 Change self.storageName within the basicTest class to the name of the storageElement you wish to run this test against.
 This storage element needs to be supporting two access protocols, using the protocolName GFAL2_SRM2 and GFAL2_XROOT
 respectively. If you want to test only either SRM2 or XROOT remove the other testsuite in the unittest.
@@ -18,54 +18,90 @@ respectively. If you want to test only either SRM2 or XROOT remove the other tes
 
 
 from DIRAC.Core.Base.Script import parseCommandLine
-from symbol import parameters
 parseCommandLine()
 
 import unittest
-from DIRAC import gLogger
+import pdb
 
+from DIRAC import gLogger
 from DIRAC.Resources.Storage.StorageElement import StorageElement
+
+#### GLOBAL VARIABLES: ################
+
+# Name of the storage element that has to be tested
+STORAGE_NAME = 'CERN-GFAL2'
+
+# base path on the storage where the test files/folders will be created
+DESTINATION_PATH = '/lhcb/user/p/pgloor'
+
+# local path containing test files. There should be a folder called Workflow containing (the files can be simple textfiles)
+# FolderA
+# -FolderAA
+# --FileAA
+# -FileA
+# FolderB
+# -FileB
+# File1
+# File2
+# File3
+
+LOCAL_PATH = 'UnitTests'
+
+### END OF GLOBAL VARIABLES ###########
+
 
 class basicTest( unittest.TestCase ):
 
   def setUp( self ):
-    self.storageName = 'CERN-GFAL2'
+    gLogger.setLevel( 'DEBUG' )
+
+    self.storageName = STORAGE_NAME
     self.tbt = None
+
+  def clearDirectory( self ):
+    workflow_folder = DESTINATION_PATH + '/Workflow'
+    res = self.tbt.removeDirectory( workflow_folder )
+    if not res['OK']:
+      print "basicTest.clearDirectory: Workflow folder maybe not empty"
 
 
   def testWorkflow( self ):
-    putDir = { '/lhcb/user/p/pgloor/Workflow/FolderA' : '/home/phi/dev/UnitTests/FolderA' , \
-          '/lhcb/user/p/pgloor/Workflow/FolderB' : '/home/phi/dev/UnitTests/FolderB' }
 
-    createDir = ['/lhcb/user/p/pgloor/Workflow/FolderA/FolderAA' , '/lhcb/user/p/pgloor/Workflow/FolderA/FolderABA', \
-                 '/lhcb/user/p/pgloor/Workflow/FolderA/FolderAAB' ]
+    putDir = {DESTINATION_PATH + '/Workflow/FolderA' : LOCAL_PATH + '/Workflow/FolderA', \
+              DESTINATION_PATH + '/Workflow/FolderB' : LOCAL_PATH + '/Workflow/FolderB'}
 
-    putFile = { '/lhcb/user/p/pgloor/Workflow/FolderA/File1' : '/home/phi/dev/UnitTests/File1' , \
-                '/lhcb/user/p/pgloor/Workflow/FolderAA/File1': '/home/phi/dev/UnitTest/File1' , \
-                '/lhcb/user/p/pgloor/Workflow/FolderBB/File2': '/home/phi/dev/UnitTest/File2' , \
-                '/lhcb/user/p/pgloor/Workflow/FolderB/File2' : '/home/phi/dev/UnitTests/File2' , \
-                '/lhcb/user/p/pgloor/Workflow/File3' : '/home/phi/dev/UnitTests/File3' }
+    createDir = [DESTINATION_PATH + '/Workflow/FolderA/FolderAA', DESTINATION_PATH + '/Workflow/FolderA/FolderABA', \
+                 DESTINATION_PATH + '/Workflow/FolderA/FolderAAB' ]
 
-    isFile = ['/lhcb/user/p/pgloor/Workflow/FolderA/File1']
+    putFile = {DESTINATION_PATH + '/Workflow/FolderA/File1' : LOCAL_PATH + '/Workflow/File1', \
+               DESTINATION_PATH + '/Workflow/FolderAA/File1': LOCAL_PATH + '/Workflow/File1', \
+               DESTINATION_PATH + '/Workflow/FolderBB/File2': LOCAL_PATH + '/Workflow/File2', \
+               DESTINATION_PATH + '/Workflow/FolderB/File2' : LOCAL_PATH + '/Workflow/File2', \
+               DESTINATION_PATH + '/Workflow/File3' : LOCAL_PATH + '/Workflow/File3' }
 
-    listDir = ['/lhcb/user/p/pgloor/Workflow', \
-               '/lhcb/user/p/pgloor/Workflow/FolderA', \
-               '/lhcb/user/p/pgloor/Workflow/FolderB']
+    isFile = [DESTINATION_PATH + '/Workflow/FolderA/File1', DESTINATION_PATH + '/Workflow/FolderB/FileB']
 
-    getDir = [ '/lhcb/user/p/pgloor/Workflow/FolderA', \
-           '/lhcb/user/p/pgloor/Workflow/FolderB']
 
-    removeFile = ['/lhcb/user/p/pgloor/Workflow/FolderA/File1']
-    rmdir = ['/lhcb/user/p/pgloor/Workflow']
+    listDir = [DESTINATION_PATH + '/Workflow', \
+               DESTINATION_PATH + '/Workflow/FolderA', \
+               DESTINATION_PATH + '/Workflow/FolderB']
+
+    getDir = [DESTINATION_PATH + '/Workflow/FolderA', \
+           DESTINATION_PATH + '/Workflow/FolderB']
+
+    removeFile = [DESTINATION_PATH + '/Workflow/FolderA/File1']
+    rmdir = [DESTINATION_PATH + '/Workflow']
+
 
     ########## uploading directory #############
     res = self.tbt.putDirectory( putDir )
     self.assertEqual( res['OK'], True )
     res = self.tbt.listDirectory( listDir )
-    self.assertEqual( any('/lhcb/user/p/pgloor/Workflow/FolderA/FileA' in dictKey for dictKey in \
-                  res['Value']['Successful']['/lhcb/user/p/pgloor/Workflow/FolderA']['Files'].keys() ), True )
-    self.assertEqual( any( '/lhcb/user/p/pgloor/Workflow/FolderB/FileB' in dictKey for dictKey in \
-                      res['Value']['Successful']['/lhcb/user/p/pgloor/Workflow/FolderB']['Files'].keys() ), True )
+    self.assertEqual( any( DESTINATION_PATH + '/Workflow/FolderA/FileA' in dictKey for dictKey in \
+                  res['Value']['Successful'][DESTINATION_PATH + '/Workflow/FolderA']['Files'].keys() ), True )
+    self.assertEqual( any( DESTINATION_PATH + '/Workflow/FolderB/FileB' in dictKey for dictKey in \
+                      res['Value']['Successful'][DESTINATION_PATH + '/Workflow/FolderB']['Files'].keys() ), True )
+
 
     ########## createDir #############
     res = self.tbt.createDirectory( createDir )
@@ -82,15 +118,29 @@ class basicTest( unittest.TestCase ):
     res = self.tbt.isFile( isFile )
     self.assertEqual( res['OK'], True )
     self.assertEqual( res['Value']['Successful'][isFile[0]], True )
+    self.assertEqual( res['Value']['Successful'][isFile[1]], True )
+
+    ######## getMetadata ###########
+    res = self.tbt.getFileMetadata( isFile )
+    self.assertEqual( res['OK'], True )
+    res = res['Value']['Successful']
+    self.assertEqual( any( path in resKey for path in isFile for resKey in res.keys() ), True )
 
     ####### getDirectory ######
-    res = self.tbt.getDirectory( getDir, '/home/phi/dev/UnitTests/getDir' )
+    res = self.tbt.getDirectory( getDir, LOCAL_PATH + '/getDir' )
     self.assertEqual( res['OK'], True )
     res = res['Value']
     self.assertEqual( any( getDir[0] in dictKey for dictKey in res['Successful'] ), True )
     self.assertEqual( any( getDir[1] in dictKey for dictKey in res['Successful'] ), True )
 
     ###### removeFile ##########
+    res = self.tbt.removeFile( removeFile )
+    self.assertEqual( res['OK'], True )
+    res = self.tbt.exists( removeFile )
+    self.assertEqual( res['OK'], True )
+    self.assertEqual( res['Value']['Successful'][removeFile[0]], False )
+
+    ###### remove non existing file #####
     res = self.tbt.removeFile( removeFile )
     self.assertEqual( res['OK'], True )
     res = self.tbt.exists( removeFile )
@@ -108,17 +158,24 @@ class SRM2V2Test( basicTest ):
   def setUp( self ):
     basicTest.setUp( self )
     self.tbt = StorageElement( self.storageName, protocols = 'GFAL2_SRM2' )
+    basicTest.clearDirectory( self )
 
+class HTTPTest( basicTest ):
+
+  def setUp( self ):
+    basicTest.setUp( self )
+    self.tbt = StorageElement( self.storageName, protocols = 'GFAL2_HTTP' )
+    basicTest.clearDirectory( self )
 
 class XROOTTest( basicTest ):
 
   def setUp( self ):
     basicTest.setUp( self )
     self.tbt = StorageElement( self.storageName, protocols = 'GFAL2_XROOT' )
+    basicTest.clearDirectory( self )
 
 
 if __name__ == '__main__':
-  # gLogger.setLevel( 'DEBUG' )
   suite = unittest.defaultTestLoader.loadTestsFromTestCase( SRM2V2Test )
-  suite.addTest( unittest.defaultTestLoader.loadTestsFromTestCase( XROOTTest ) )
+  # suite.addTest( unittest.defaultTestLoader.loadTestsFromTestCase( XROOTTest ) )
   unittest.TextTestRunner( verbosity = 2 ).run( suite )

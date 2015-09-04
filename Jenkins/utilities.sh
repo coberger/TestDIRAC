@@ -138,9 +138,9 @@ function findDatabases(){
 	#
 	if [ ! -z "$DBstoExclude" ]
 	then 
-		find *DIRAC -name *DB.sql | grep -vE '(TransferDB.sql|FileCatalogDB|FileCatalogWithFkAndPsDB|InstalledComponentsDB)' | awk -F "/" '{print $2,$4}' | grep -v $DBstoExclude | sort | uniq > databases
+		find *DIRAC -name *DB.sql | grep -vE '(FileCatalogDB|FileCatalogWithFkAndPsDB|InstalledComponentsDB)' | awk -F "/" '{print $2,$4}' | grep -v $DBstoExclude | sort | uniq > databases
 	else
-		find *DIRAC -name *DB.sql | grep -vE '(TransferDB.sql|FileCatalogDB|FileCatalogWithFkAndPsDB|InstalledComponentsDB)' | awk -F "/" '{print $2,$4}' | grep $DBstoSearch | sort | uniq > databases
+		find *DIRAC -name *DB.sql | grep -vE '(FileCatalogDB|FileCatalogWithFkAndPsDB|InstalledComponentsDB)' | awk -F "/" '{print $2,$4}' | grep $DBstoSearch | sort | uniq > databases
 	fi
 
 	echo found `wc -l databases`
@@ -438,6 +438,9 @@ function diracUserAndGroup(){
 	dirac-admin-add-group -G prod -U adminusername,ciuser,trialUser -P Operator,FullDelegation,ProxyManagement,ServiceAdministrator,JobAdministrator,CSAdministrator,AlarmsManagement,FileCatalogManagement,SiteManager,NormalUser $DEBUG
 	
 	dirac-admin-add-shifter DataManager adminusername prod $DEBUG
+	dirac-admin-add-shifter TestManager adminusername prod $DEBUG
+	dirac-admin-add-shifter ProductionManager adminusername prod $DEBUG
+	dirac-admin-add-shifter LHCbPR adminusername prod $DEBUG
 }
 
 
@@ -502,8 +505,8 @@ function diracAddSite(){
 diracServices(){
 	echo '[diracServices]'
 
-	#TODO: revise this list, try to add services
-	services=`cat services | cut -d '.' -f 1 | grep -v Bookkeeping | grep -v ^ConfigurationSystem | grep -v LcgFileCatalogProxy | grep -v MigrationMonitoring | grep -v Plotting | grep -v RAWIntegrity | grep -v RunDBInterface | grep -v RequestManager | grep -v RequestProxy  | grep -v TransferDBMonitoring | grep -v SiteProxy | grep -v SiteMap  | grep -v ComponentMonitoring | sed 's/System / /g' | sed 's/Handler//g' | sed 's/ /\//g'`
+	#TODO: revise this list
+	services=`cat services | cut -d '.' -f 1 | grep -v Bookkeeping | grep -v ^ConfigurationSystem | grep -v LcgFileCatalogProxy | grep -v Plotting | grep -v RAWIntegrity | grep -v RunDBInterface | grep -v ComponentMonitoring | sed 's/System / /g' | sed 's/Handler//g' | sed 's/ /\//g'`
 	
 	# group proxy, will be uploaded explicitly
 	#	echo 'getting/uploading proxy for prod'
@@ -511,11 +514,40 @@ diracServices(){
 	
 	for serv in $services
 	do
-		echo 'calling dirac-install-service' $serv $DEBUG 
-		dirac-install-service $serv $DEBUG
+		echo 'calling dirac-install-component' $serv $DEBUG 
+		dirac-install-component $serv $DEBUG
 	done
 
 }
+
+#-------------------------------------------------------------------------------
+# diracAgents:
+#
+#   installs all agents on the file agents
+#
+#-------------------------------------------------------------------------------
+
+diracAgents(){
+	echo '[diracAgents]'
+
+	#TODO: revise this list
+	agents=`cat agents | cut -d '.' -f 1 | grep -v LFC | grep -v MyProxy | grep -v CAUpdate | grep -v CE2CSAgent.py | grep -v FrameworkSystem | grep -v DiracSiteAgent | grep -v StatesMonitoringAgent | grep -v DataProcessingProgressAgent | grep -v RAWIntegrityAgent  | grep -v GridSiteWMSMonitoringAgent  | grep -v GridSiteMonitoringAgent | grep -v HCAgent | grep -v GridCollectorAgent | grep -v HCProxyAgent | grep -v Nagios | grep -v AncestorFiles | grep -v BKInputData | grep -v SAMAgent | grep -v LHCbPRProxyAgent | sed 's/System / /g' | sed 's/ /\//g'`
+	
+	for agent in $agents
+	do
+		if [[ $agent == *" JobAgent"* ]]
+		then
+			echo ''
+		else
+			echo 'calling dirac-cfg-add-option agent' $agent
+			python $WORKSPACE/TestDIRAC/Jenkins/dirac-cfg-add-option.py agent $agent
+			echo 'calling dirac-agent' $agent -o MaxCycles=1 $DEBUG 
+			dirac-agent $agent  -o MaxCycles=1 $DEBUG
+		fi
+	done
+
+}
+
 
 
 #-------------------------------------------------------------------------------

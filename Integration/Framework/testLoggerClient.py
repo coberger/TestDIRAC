@@ -1,3 +1,6 @@
+# FIXME: to bring back to life
+
+
 from DIRAC.Core.Base.Script import parseCommandLine
 from DIRAC.FrameworkSystem.Client.LoggerClient import LoggerClient
 
