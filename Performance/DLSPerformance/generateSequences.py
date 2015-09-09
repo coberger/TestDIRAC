@@ -28,8 +28,10 @@ servAddress = 'dips://%s:%s/DataManagement/DataLogging' % ( hostname, port ) + '
 randomMax = 100000
 randomMethocall = 20
 
-dictLong = {'files': '/lhcb/data/file', 'targetSE': '/SE/Target/se',
- 'blob': 'physicalFile = blablablablablabla ,fileSize = 6536589', 'srcSE': '/SE/SRC/src'}
+file = '/lhcb/data/file'
+targetSE = 'targetSE'
+blob = 'physicalFile = blablablablablabla ,fileSize = 6536589'
+srcSE = 'srcSE'
 
 def makeSequence():
   sequence = DLSequence()
@@ -50,26 +52,26 @@ def makeSequence():
 
   files = []
   for x in range( 4 ):
-    files.append( dictLong['files'] + str( random.randint( 0, randomMax ) ) + '.data' )
+    files.append( file + str( random.randint( 0, randomMax ) ) + '.data' )
 
   sources = []
   for x in range( 4 ):
-    sources.append( dictLong['srcSE'] + str( random.randint( 0, randomMax ) ) )
+    sources.append( srcSE + str( random.randint( 0, randomMax ) ) )
 
   targets = []
   for x in range( 4 ):
-    targets.append( dictLong['targetSE'] + str( random.randint( 0, randomMax ) ) )
+    targets.append( targetSE + str( random.randint( 0, randomMax ) ) )
 
   for call in calls :
     for x in range( 2 ):
       call.addAction( DLAction( DLFile( files[x * 2] ) , 'Successful' ,
               DLStorageElement( sources[x * 2] ),
                DLStorageElement( targets[x * 2] ),
-              dictLong['blob'], 'errorMessage' ) )
+              blob, None, None ) )
       call.addAction( DLAction( DLFile( files[x * 2 + 1 ] ) , 'Failed',
               DLStorageElement( sources[x * 2 + 1 ] ),
                DLStorageElement( targets[x * 2 + 1] ),
-              dictLong['blob'], 'errorMessage' ) )
+              blob, 'errorMessage', random.randint( 1, 1999 ) ) )
   return sequence
 
 
